@@ -1,0 +1,801 @@
+%% Copernicus Publications Manuscript Preparation Template for LaTeX Submissions
+%% ---------------------------------
+%% This template should be used for copernicus.cls
+%% The class file and some style files are bundled in the Copernicus Latex Package, which can be downloaded from the different journal webpages.
+%% For further assistance please contact Copernicus Publications at: production@copernicus.org
+%% https://publications.copernicus.org/for_authors/manuscript_preparation.html
+
+
+%% Please use the following documentclass and journal abbreviations for discussion papers and final revised papers.
+
+%% 2-column papers and discussion papers
+\documentclass[amt, manuscript]{copernicus}
+
+
+
+%% Journal abbreviations (please use the same for discussion papers and final revised papers)
+
+
+% Advances in Geosciences (adgeo)
+% Advances in Radio Science (ars)
+% Advances in Science and Research (asr)
+% Advances in Statistical Climatology, Meteorology and Oceanography (ascmo)
+% Annales Geophysicae (angeo)
+% Archives Animal Breeding (aab)
+% ASTRA Proceedings (ap)
+% Atmospheric Chemistry and Physics (acp)
+% Atmospheric Measurement Techniques (amt)
+% Biogeosciences (bg)
+% Climate of the Past (cp)
+% DEUQUA Special Publications (deuquasp)
+% Drinking Water Engineering and Science (dwes)
+% Earth Surface Dynamics (esurf)
+% Earth System Dynamics (esd)
+% Earth System Science Data (essd)
+% E&G Quaternary Science Journal (egqsj)
+% European Journal of Mineralogy (ejm)
+% Fossil Record (fr)
+% Geochronology (gchron)
+% Geographica Helvetica (gh)
+% Geoscience Communication (gc)
+% Geoscientific Instrumentation, Methods and Data Systems (gi)
+% Geoscientific Model Development (gmd)
+% History of Geo- and Space Sciences (hgss)
+% Hydrology and Earth System Sciences (hess)
+% Journal of Micropalaeontology (jm)
+% Journal of Sensors and Sensor Systems (jsss)
+% Mechanical Sciences (ms)
+% Natural Hazards and Earth System Sciences (nhess)
+% Nonlinear Processes in Geophysics (npg)
+% Ocean Science (os)
+% Primate Biology (pb)
+% Proceedings of the International Association of Hydrological Sciences (piahs)
+% Scientific Drilling (sd)
+% SOIL (soil)
+% Solid Earth (se)
+% The Cryosphere (tc)
+% Weather and Climate Dynamics (wcd)
+% Web Ecology (we)
+% Wind Energy Science (wes)
+
+
+%% \usepackage commands included in the copernicus.cls:
+%\usepackage[german, english]{babel}
+%\usepackage{tabularx}
+%\usepackage{cancel}
+%\usepackage{multirow}
+%\usepackage{supertabular}
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
+%\usepackage{amsthm}
+%\usepackage{float}
+%\usepackage{subfig}
+%\usepackage{rotating}
+
+
+\begin{document}
+
+\title{A Semi-Lagrangian Method for Detecting and Tracking Deep Convective Clouds in Geostationary Satellite Observations}
+
+% \Author[affil]{given_name}{surname}
+\Author[1]{William K.}{Jones}
+\Author[1]{Matthew W.}{Christensen}
+\Author[1]{Philip}{Stier}
+
+\affil[1]{Atmospheric, Oceanic \& Planetary Physics, Department of Physics, University of Oxford, Oxford, UK}
+
+%% The [] brackets identify the author with the corresponding affiliation. 1, 2, 3, etc. should be inserted.
+
+%% If an author is deceased, please add a further affiliation and mark the respective author name(s) with a dagger, e.g. "\Author[2,$\dag$]{Anton}{Aman}" with the affiliations "\affil[2]{University of ...}" and "\affil[$\dag$]{deceased, 1 July 2019}"
+
+
+\correspondence{William K. Jones (william.jones@physics.ox.ac.uk)}
+
+\runningtitle{A Semi-Lagrangian Method for Detecting and Tracking Deep Convective Clouds in...}
+
+\runningauthor{William K. Jones}
+
+
+
+
+
+\received{}
+\pubdiscuss{} %% only important for two-stage journals
+\revised{}
+\accepted{}
+\published{}
+
+%% These dates will be inserted by Copernicus Publications during the typesetting process.
+
+
+\firstpage{1}
+
+\maketitle
+
+
+
+\begin{abstract}
+Automated methods for the detection and tracking of deep convective storms in geostationary satellite imagery have a vital role in both the forecasting of severe storms and research into their behaviour.
+Studying the interactions and feedbacks between multiple deep convective clouds, however, poses a challenge for existing algorithms due to the necessary compromise between false detection and missed detection errors.
+We utilise an optical flow method to determine the motion of deep convective clouds in GOES-16 ABI imagery in order to construct a semi-Lagrangian framework for the motion of the cloud field, independently of the detection and tracking of cloud objects.
+The semi-Lagrangian framework allows for severe storms to be simultaneously detected and tracked in both spatial and temporal dimensions.
+For the purpose of this framework we have developed a novel Lagrangian convolution method and a number of novel implementations of morphological image operations that account for the motion of observed objects.
+These novel methods allow the accurate extension of computer vision techniques to the temporal domain for moving objects such as DCCs.
+By combining this framework with existing methods for detecting deep convective clouds (including detection of growing cores through cloud top cooling and detection of anvil using brightness temperature), we show that the novel framework enables reductions in errors due to both false and missed detections compared to any of the individual methods, reducing the need to compromise when compared with existing frameworks.
+The novel framework enables the continuous tracking of anvil clouds associated with detected deep convection after convective activity has stopped, enabling the study of the entire lifecycle of deep convective clouds and their associated anvils.
+Furthermore, we expect this framework to applicable to a wide range of cases including the detection and tracking of low-level clouds and other atmospheric phenomena.
+In addition, this framework may be used to combine observations from multiple sources, including satellite observations, weather radar and reanalysis model data.
+\end{abstract}
+
+
+% \copyrightstatement{TEXT}
+
+
+\introduction  %% \introduction[modified heading if necessary]
+
+
+%f
+\begin{figure*}[t]
+    \includegraphics[width=12cm]{figure01.pdf}
+    \caption{Observations of a cluster of deep convective clouds over North-West Florida throughout three stages of their lifecycle. This cluster of DCCs occurred on the afternoon of 19\textsuperscript{th} June 2018. The "growing" column were observed at 17:00 UTC, the "mature" column at 19:00 UTC, and the dissipating column at 21:00 UTC. Note that, unless otherwise specified, this case study is used for all subsequent figures in this article.}
+    \label{fig:compare_sat_radar_glm}
+\end{figure*}
+
+
+Deep convective clouds (DCCs) are strongly linked with extreme weather events, including heavy precipitation, lightning and hail \citep{westra_future_2014, houze_chapter_2014, williams_radar_1992, bruning_theory_2013, punge_hail_2016, matsudo_severe_2011}. 
+DCCs are also strongly linked to global climate circulation and the global energy budget \citep{houze_mesoscale_2004, fritsch_mesoscale_2001, johnson_mesoscale_2001}.
+Furthermore, the frequency and intensity of DCCs and their associated precipitation is expected to increase with global warming, a prediction that is supported by both global climate model \citep{allen_constraints_2002, trenberth_changing_2003, held_robust_2006, muller_energetic_2011, ogorman_energetic_2012, ogorman_precipitation_2015} and observational evidence \citep{tan_increases_2015, berg_strong_2013, aumann_increased_2018, houze_extreme_2019}.
+Improving our understanding of the behaviour of DCCs and their interactions with the wider environment is vital for predicting the impacts of future climate change \citep{westra_future_2014}.
+
+Sequences of images from satellite instruments have been used to detect and track the motion of deep convective clouds and tropical storms since the earliest geostationary weather satellites \citep{menzel_cloud_2001}.
+Whereas early detection and tracking was performed by hand, numerous algorithms have been developed for the purpose of performing this task automatically, and are widely used for both forecasting and research purposes \citep[e.g.][]{mecikalski_use_2011, senf_characterization_2015, senf_satellite-based_2017, feng_life_2012, feng_spatiotemporal_2019, zinner_cb-tram:_2008}.
+There is a continual effort both to improve existing algorithms and develop new methods to support these activities.
+However, it is important to understand the differences in observations of DCCs from satellite imagery to those of other sources, particularly radar and lightning observations.
+
+Visible and infra-red (IR) imagery from modern geostationary weather satellite instruments provide unique observations of DCCs and their surrounding environment.
+Figure \ref{fig:compare_sat_radar_glm} compares how satellite visible and IR, radar and lightning observations observe DCCs throughout three different stages of their lifecycle.
+Composite RGB images from a combination visible and near-IR channels aboard the Advanced Baseline Imager (ABI) show a.: small, isolated cores during the growing phase; b.: a large are of optically thick anvil during the mature phase, and c.: a large area of optically thin anvil cloud during the dissipating phase.
+Brightness temperature imagery from the ABI 10.8 \unit{\mu m} channel displays d.: rapidly cooling cores; e.: a large, cold anvil cloud, and f.:, warmer brightness temperatures caused by thermal radiation from the surface penetrating the optically thin dissipating anvil. 
+Lightning flash locations observed by the geostationary lightning mapper (GLM) aboard GOES-16 shows g.: low frequency during the growing phase; h.: high frequency during the mature phase, and i.: no lightning activity in the dissipating phase. 
+Column mean radar reflectivity observed by NEXRAD weather radars show high radar reflectivity in the convective cores during the j. growing and k. mature phases, and no area of high radar reflectivity during the dissipating phase. 
+The outline of the region of brightness temperatures below 270 \unit{K} observed by ABI is shown by the orange dashed contour over the GLM flash locations and NEXRAD radar reflectivity to indicate their observations relative to the anvil cloud.
+
+These instruments are capable of observing the entire extent of the anvil clouds associated with DCCs over their entire lifecycle, even after convective activity has ceased (figure \ref{fig:compare_sat_radar_glm}f).
+This is of particular importance due to the influence of anvil cloud radiative forcing on the climate, their response to temperature change \citep{bony_thermodynamic_2016, hartmann_tropical_2016, ceppi_cloud_2017, gasparini_what_2019} and possible feedbacks on subsequent convective activity \citep{varble_erroneous_2018}.
+The newest generation of geostationary imaging satellites offer even greater opportunities for the study of DCCs due to their high spatial and temporal resolution -- allowing the detection and tracking of individual convective cores \citep{heikenfeld_tobac_2019} -- and also due to their high signal to noise ratio allowing research quality observations \citep{iacovazzi_goes-16_2020}.
+
+The detection and tracking of DCCs from satellite imagery remains challenging due to the inability to directly observe the convection that drives DCCs using passive visible and IR observations.
+This is unlike radar and lightning observations, which can directly observe deep convection due to the strong correlations between core updraft intensity and radar reflectivity and polarisation \citep{austin_relation_1987, rosenfeld_general_1993, zipser_vertical_1994},  and lightning flash occurrence \citep{williams_relationship_1989, deierling_total_2008, wang_relationship_2017}.
+Instead, a proxy for convective activity must be used to detect deep convection in visible/IR satellite imagery.
+The approaches used for this can generally be separated into two separate methods. 
+Firstly, the use of thresholds on brightness temperature (BT) or other observed fields, which are capable of detecting DCC anvil clouds \citep[e.g.][]{schmetz_monitoring_1997, hong_detection_2005, schroder_deep_2009, liang_integrated_2017, senf_size-resolved_2018}.
+Secondly, the detection of rapidly growing cloud tops by observing changes in the anvil cloud top radiative cooling, or by other similar approximations of cloud growth \citep{zinner_cb-tram:_2008, bedka_objective_2010, muller_novel_2019}.
+
+Developing a detection method using either approach is made challenging by the dynamic nature of DCCs themselves.
+DCC cores typically have diameters of around 10\unit{km}, and updraft velocities on the order of 10\unit{ms\textsuperscript{-1}} \citep{weisman_mesoscale_2015}, and exist for 1-3 hours \citep{chen_diurnal_1997}.
+Large, mesoscale convective systems (consisting of multiple cores joined by a single large anvil \citep{roca_simple_2017}) may span areas several orders of magnitude larger than isolated DCCs \citep{houze_mesoscale_2004}, and typically exist to 10-20 hours or longer \citep{chen_diurnal_1997}.
+The life cycle of a DCC can be split into three phases: an initiation or growing phase, a mature phase and a dissipating phase after the cessation of convective activity \citep{wall_life_2018}.
+There exists a significant difference between the diurnal cycles of deep convection over the land and over the ocean, with observed DCCs over land clustered towards the end of the day \citep{taylor_evaluating_2017}.
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=8.3cm]{figure02.pdf}
+    \caption{Cross sections of the DCC observed in figure \ref{fig:compare_sat_radar_glm} as they develop over time. a.: ABI 10.8 \unit{\mu m} brightness temperature, showing rapid cooling for the first 30 minutes, followed by an expanding region of anvil cloud that begins to thin and warm after 2-3 hours. b.: Column mean radar reflectivity, showing the presence and location of the convective core. Initiation occurred at 82.0°W 28.5°N at a time of 17:00 UTC.}
+    \label{fig:dcc_over_time}
+\end{figure}
+
+The difficulties of detecting DCCs using various proxy approaches is demonstrated by the cross sections of an observed DCC over time in figure \ref{fig:dcc_over_time}.
+The observed brightness temperature of the DCC anvil cloud shows wide variation of over time, with the anvil cloud warming due to dissipation after the end of convective activity.
+This wide variety of observed temperatures leads to large differences in the chosen threshold value between different algorithm \citep[see discussion in][]{bennartz_convective_2012}.
+This choice of threshold value is further complicated due to the overlap in observed brightness temperatures between DCC anvils and non-convective clouds \citep{konduru_new_2013}.
+As a result, any detection method using a brightness temperature threshold must compromise between missed detection of DCCs, or false detections of non-DCC clouds.
+
+The cooling of the cloud top is only visible for a short period during the initial phase of the DCC, before the anvil cloud top reaches the tropopause temperature after approximately 30 minutes.
+As a result, any method that solely relies on detecting the growth of the DCC will be unable to detect the anvil cloud after this initial growth phase has ended.
+While such algorithms provide an accurate detection of these early phases of DCC growth \citep{zinner_validation_2013}, they are unable to continue tracking the anvil cloud after convective activity is no longer observed.
+
+\citet{fiolleau_algorithm_2013} identified this need to compromise on the accuracy of detecting DCCs as a problem caused by the commonly used two-step framework for detecting and tracking DCCs.
+In this framework, DCCs are first detected in individual images, and then linked together over time in sequences of images.
+As a result, the detection method chosen must be capable of detecting DCCs at each individual time step in order to track their entire lifecycle.
+Instead \citet{fiolleau_algorithm_2013} implemented a single-step framework for mesoscale convective systems that treats a sequence of images as a "3D" volume, and performs detection and tracking simultaneously by applying a watershed method over both spatial and temporal dimensions.
+Whereas this approach was successful for large, mesoscale systems, where the advection of the anvil is small compared to the over anvil area, it is less capable of tracking small, rapidly moving convective cores.
+To improve the tracking of small DCCs, we have developed a semi-Lagrangian framework for single-step detection and tracking which accounts for the motion of DCCs using optical flow.
+
+By utilising the semi-Lagrangian framework, we are able to combine the best elements of both active and passive detection methods.
+We show that it is possible to detect growing DCCs to a high degree of accuracy using methods similar to those of \citet{zinner_cb-tram:_2008}, and then extend the detected DCC over the entire anvil cloud using the "3D" watershed method of \citet{fiolleau_algorithm_2013}.
+This framework reduces the compromise required between the rate of missed DCCs and falsely detected DCCs, improving the overall accuracy of our detection method compared to existing approaches.
+Furthermore, this method allows the anvil cloud to be detected and tracked even after the region of active growth is no longer detected.
+Finally, the "3D" method handles the merging and splitting of intersecting DCCs by detecting all DCCs that intersect at any point during their lifetime as a merged object.
+
+
+% Performing such research is made difficult in particular by the wide range of scales -- both spatial and temporal -- required.
+% Whereas deep convective cores required spatial resolution on kilometer scales and sub-hourly time steps to resolve, large scale balance in energetic and hydrological drivers appears on scales of thousands of kilometers and inter-annual periods.
+% Geostationary satellite observations are uniquely capable of providing data on DCCs spanning this range of scales.
+% Furthermore, unlike observations from weather radars or lightning detectors, satellite imagery is capable of detecting DCCs and their associated anvil clouds throughout their entire lifecycle (figure \ref{fig:compare_sat_radar_glm}).
+
+% Accurate classification of DCCs is vital for understanding their behaviour in response to environmental interactions and feedbacks.
+% Detecting DCCs using visible and IR satellite imagery is challenging however as they cannot observe deep convection directly.
+% Unlike weather radar, lightning detector and forecast and reanalysis model data, which provide properties directly linked to deep convection, proxy observations must be used to detect DCCs in satellite images.
+% We can separate the approaches to choosing a proxy for detecting DCCs into two general categories:
+
+% \begin{enumerate}
+%     \item Passive methods, which involve one or more thresholds of observed fields including as longwave IR brightness temperature, outgoing longwave radiation, and retrieved properties such as cloud top height and effective cloud particle size.
+%     \item Active methods, which observe changes in observations, either in changes over time or spatial gradients, which are indicative of deep convection.
+% \end{enumerate}
+
+
+% The accuracy of detection methods for DCCs can be evaluated in terms of their false detection and missed detection rates (analogous to type 1 and type 2 errors respectively).
+% The former occurs when an algorithm classifies a region as a DCC when none is present, and the latter when an algorithm fails to classify a DCC that is present.
+% The choice of proxy for detecting deep convection is complicated by the innate dynamical nature of DCCs themselves.
+% As a result, there is no single proxy that is capable of accurately detecting DCCs over their entire lifecycle.
+% Instead, a compromise must be made between reducing false detections and missed detections.
+% Passive detection proxies can generally be optimised for either a low false detection or low missed detection rate by changing the sensitivity of the threshold used, however this comes at a cost to the opposite measure of accuracy.
+% Whereas active detection methods are generally capable of reducing both error rates, they are only capable of detecting DCCs when active growth is observed, and therefore are only capable of making detections for a small proportion of the DCC lifecycle.
+
+% The need to compromise on accuracy is problematic for studying the interactions between multiple DCCs, and both false and missed detections will cause spurious relationships to be discovered.
+% A large reason for the compromise in accuracy is due to the two-stage framework used for detection and tracking in the majority of algorithms.
+% In this framework, the algorithm first detects regions of DCCs in individual images, and then tracks detected regions over time in sequences of images.
+% As a result, the detection method chosen must be capable of detecting DCCs in each individual image in order to track their entire lifecycle.
+% Fiolleau and Roca identified this problem, and instead implemented a single-step framework for mesoscale convective systems that treats a sequence of images as a "3D" volume, and performs detection and tracking simultaneously by applying a watershed method over both spatial and temporal dimensions.
+% Whereas this approach was successful for large, mesoscale systems, where the advection of the anvil is small compared to the over anvil area, it is less capable of tracking small, rapidly moving convective cores.
+% To improve the tracking of small DCCs, we have developed a semi-Lagrangian framework for single-step detection and tracking which accounts for the motion of DCCs using optical flow.
+
+% By utilising the semi-Lagrangian framework, we are able to combine the best elements of both active and passive detection methods.
+% Growing deep convective cores are detected to a high degree of accuracy using an active detection method.
+% This classification is then extended to the entirety of the associated anvil cloud by watershed segmentation over both spatial and temporal dimensions.
+% This framework allows the anvil cloud to be detected and tracked even after the region of active growth is no longer detected.
+
+
+\section{Data}
+
+Three sources of data are used throughout this article.
+Primarily, visible and IR imagery from ABI aboard the Geostationary Operational Environmental Satellite (GOES)-16 weather satellite is used for the detection of DCCs.
+Secondarily, observations from the NEXRAD weather radar network and the geostationary lightning mapper (also aboard GOES-16) are used to assess and validate the tracking and detection method presented here.
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=8.3cm]{figure03.pdf}
+    \caption{ABI channels and channel differences used with the detection and tracking algorithm. a.: The 10.8 \unit{\mu m} brightness temperature, or clean longwave window channel, which can differentiate clouds at all altitudes by their brightness temperature. b.: the water vapour difference (WVD) combination, of the 6.2 \unit{\mu m} upper troposphere water vapour channel minus the 7.3 \unit{\mu m} lower troposphere water vapour channel, which is strongly negative for clear sky and low cloud, but approaches positive values for thick, high clouds. c.: the split window difference (SWD) combination of the 10.8 \unit{\mu m} clean longwave window channel minus the 12.3 \unit{\mu m} dirty longwave window channel, which is near zero for thick clouds, around 5 \unit{K} for clear skies and approximately 10 \unit{K} for thin, ice clouds.}
+    \label{fig:abi_channels}
+\end{figure}
+
+\subsection{Advanced Baseline Imager}
+
+
+The Advanced Baseline Imager (ABI) is a visible and IR radiometer aboard the Geostationary Operational Environmental Satellite (GOES)-16 series of weather satellites \citep{schmit_closer_2016}.
+GOES-16, also known as GOES-East, is situated in a geostationary orbit at 75.2°W above the equator, providing a field of view (or "Earth-disc") covering most of the western hemisphere, including all of South America and most of North America.
+ABI has 16 channels operating in a range of spectral bands in the visible, Near-IR and thermal-IR.
+The majority of these channels have a resolution of 2 \unit{km} at the sub-satellite point, although this reduces to approximately 3 \unit{km} across most of the continental United States due to the satellite viewing angle.
+ABI operates in a flexible scan mode, imaging the continental US once every 5 minutes, the full disc every 10 minutes (15 minutes prior to April 2019), and two mesoscale regions of approximately 2500 by 2500 \unit{km} every minute.
+Additionally, it is capable of scanning the full-disc every five minutes if no other scans are performed.
+This combination of high spatial and temporal resolution makes ABI suitable for detecting and tracking small and developing DCCs, as well as providing the spatial coverage to also track large mesoscale convective systems \citep{heikenfeld_tobac_2019}.
+
+In addition, the data provided by ABI has a substantially higher signal to noise ratio than previous geostationary imaging instruments \citep{iacovazzi_goes-16_2020}.
+This, combined with many of the channels being derived from those aboard the Visible Infrared Imaging Radiometer Suite (VIIRS), make the data from ABI more suitable for research purposes than that from older instruments \citep{heidinger_chapter_2020}.
+
+In this paper we have used the ABI level 2 multi-channel cloud and moisture imagery product (MCMIP) over the continental US domain \citep{schmit_chapter_2020}.
+This product consists of calibrated reflectances and brightness temperatures on a common grid.
+All data has been sourced through the National Oceanic and Atmospheric Administration Big Data Program.
+
+\subsubsection{Selection of ABI Channels and Channel Combinations}
+
+In order to have equal performance during both day and nighttime, a selection of longwave IR ABI channels are used for the detection and tracking of DCCs (see figure \ref{fig:abi_channels}). 
+These channels consist of the LW clean and dirty window channels at 10.8 \unit{\mu m} and 12.3 \unit{\mu m} respectively, and the upper and lower troposphere water vapour channels at 6.2 \unit{\mu m} and 7.3 \unit{\mu m} respectively.
+Whereas the LW window IR brightness temperature is commonly used for the detection of DCCs, we have decided not to use it for this purpose in this method due to the wide range of brightness temperatures observed within anvil clouds, and the variance of anvil cloud temperature because of changes in tropopause temperature due to meteorology and latitude.
+However, the information contained within this field is used to for the optical flow calculation of the cloud motion field.
+
+Two additional combinations of channels are used to detect areas of deep convective cloud anvil. 
+The water vapour difference (WVD) combination (figure \ref{fig:abi_channels}b) of the upper troposphere WV channel minus the lower troposphere WV channel has been shown to provide a high detection rate for deep convective clouds \citep{muller_role_2018, muller_novel_2019}.
+In clear sky or low cloud conditions, WVD shows the temperature difference between the upper and lower troposphere of generally around -20 K. 
+However, in the presence of high, thick clouds the 6.2 \unit{\mu m} has an additional contribution from stratospheric water vapour produces a warm, and in extreme cases positive WVD value \citep{schmetz_monitoring_1997}.
+This provides clear distinction between thick, high cloud and other clouds, with the cutoff value of -5 °C giving a high detection rate of anvil clouds \citep{muller_novel_2019}. 
+Furthermore, as the WVD values are relative to the lower stratosphere temperatures, this field is much less affected by location and meteorology than the LW IR channel.
+However, the WVD is still prone to the false detections of non-convective clouds when using a thresholding method.
+
+The split window difference (SWD) (figure \ref{fig:abi_channels}c) (the clean IR window channel minus the dirty IR window channel) aids in the detection and separation of optically thin anvil cloud (including cirrus outflow) from optically thick anvil due to the difference in ice particle emissivity between these two channels \citep{heidinger_gazing_2009}.
+As a result, this combination displays warm temperatures of around 10 \unit{K} for thin, ice clouds, near 0 \unit{K} for thick clouds, and approximately 5\unit{K} for clear skies due to the contribution of boundary layer water vapour.
+By adding or subtracting the SWD from the WVD field, we can remove or include the thin anvil from our detection scheme respectively.
+
+
+\subsection{Geostationary Lightning Mapper}
+
+The Geostationary Lightning Mapper (GLM) is also mounted on GOES-16 and detects lightning flashes using an optical transient detector.
+The optical transient detector utilises a single, narrow-band near-IR channel centred on 777\unit{nm} \citep{orville_absolute_1984} to detect momentary changes in brightness associated with lightning events at a frequency of 400\unit{\mu s} \citep{christian_global_2003}, providing a 70\% minimum efficiency of detection \citep{goodman_goes-r_2013}.
+AGLM has the same field of view as the ABI, albeit with a lower spatial resolution of 8 \unit{km} at the sub-satellite point.
+
+As lightning observations are strongly correlated with DCCs, data from GLM is used to validate the detection of DCCs using ABI.
+The level 2 GLM Lightning Cluster-Filter Algorithm product provides a dataset of events, groups and flashes processed from the GLM data \citep{peterson_research_2019}, and filters artifacts from the level 1 GLM data \citep{peterson_removing_2020}.
+From this dataset we extract detected flashes as evidence of DCC occurence.
+These locations are then processed by mapping their frequency onto the ABI grid for validation of the algorithm.
+
+\section{Method}
+
+\subsection{Estimation of cloud motion vectors using optical flow}
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=7cm]{figure04.pdf}
+    \caption{Cloud motion field for the DCC observed in figure \ref{fig:compare_sat_radar_glm} calculated using optical flow for a.: growing deep convection and b.: mature deep convection. The detected motion field is displayed by the red arrows. The 270K 10.8 \unit{\mu m} brightness temperature contour is displayed in solid blue for the initial time, and in dashed blue for a time 30 minutes after in order to show the development of the cloud field. The vectors are measured in units of pixels per frame, with 1 pixel per frame approximately equal to 60 \unit{km} \unit{hr\textsuperscript{-1}}. Optical flow vectors are estimated for the entire domain, but are here only visible for the region of high anvil cloud.}
+    \label{fig:optical_flow}
+\end{figure}
+
+
+The retrieval of atmospheric motion vectors (AMVs) has been performed since the earliest geostationary satellite observations \citep{menzel_cloud_2001}.
+AMVs provide information about the motion of clouds in the atmosphere, including DCCs \citep{bedka_application_2005}, and are routinely generated for the majority of operational geostationary earth observation satellites, including GOES-16 \citep{daniels_algorithm_nodate}. 
+However, although AMVs may provide useful information about the motion of DCCs, the non-geostrophic nature of wind fields in these conditions may result in the AMVs being calculated inaccurately or rejected by quality control checks \citep{bedka_application_2005}.
+
+Optical flow algorithms are a family of algorithms used to estimate the apparent motion of objects observed in a series of images \citep{aggarwal_computation_1988}. 
+A wide range of optical flow algorithms exist, and these have been successfully applied to many computer vision applications. 
+It should be noted that optical flow does not necessarily represent the physical motion of an object, and is instead an estimation of the relative motion between an object and the observer and additionally any change in the apparent object (including growing, shrinking or other warping of the object). 
+
+Optical flow algorithms have been previously shown to be accurate for the prediction of AMVs using geostationary satellite images \citep{wu_deriving_2016}, as long as the observations are sufficiently frequent \citep{bresky_feasibility_2006}. 
+The use of optical flow has several advantages over traditional AMVs for the retrieval of DCC motion vectors: optical flow can be calculated quickly using only two subsequent images and no \textit{a priori} information, aiding in near real-time applications; and also have no requirement for geostrophic balance. 
+Optical flow algorithms are routinely used in the nowcasting of convective precipitation, and provide accurate predictions for approximately an hour in the future, using both radar and satellite observations \citep[e.g.,][]{bowler_development_2004, bechini_enhanced_2017, woo_operational_2017}.
+
+The Farnebäck algorithm \citep{farneback_two-frame_2003} is used here for to estimate optical flow for the detection and tracking of DCCs .
+The Farnebäck algorithm calculates a `dense' field of optical flow vectors, in which a flow vector is calculated for every pixel in the origin image that maps it to its predicted location in the destination image.
+This calculation is performed by finding the minimum cross-correlation over increasingly smaller subsets of the image.
+This iterative approach allows flow vectors to be calculated to sub-pixel accuracy.
+Although more recent optical flow algorithms may provide better accuracy \citep{baker_database_2011}, we have found that the Farnebäck algorithm is particularly robust for the complex morphology of cloud fields; a property that was desired for the prediction of the motion vectors of DCCs.
+In this framework, we have used the implementation of the Farnebäck algorithm from the OpenCV image processing package \citep{opencv_library}.
+
+An example of the motion vectors calculated by the Farnebäck algorithm when applied to the 10.8~\textmu m brightness temperature field is shown in figure \ref{fig:optical_flow}.
+By comparing the predicting flow vectors to the future evolution of the cloud field (dashed line), we can see that the algorithm correctly estimates the future evolution of the anvil cloud.
+Optical flow, and similar motion vector techniques, have been successfully applied to both the detection of developing deep convection \citep{zinner_cb-tram:_2008, zhang_locating_2014} and tracking detected deep convective features \citep{senf_size-resolved_2018} separately.
+
+\subsection{A Semi-Lagrangian Framework for Morphological Image Processing}
+
+Morphological image operations analyse images based of of their geometrical and structural properties.
+Core to many morphological algorithms, from simple filters to complex neural networks \citep{kalchbrenner_convolutional_2014}, is the kernel, or convolution method.
+A convolution method performs operations on the pixels of an image by applying a convolution stencil to the pixel and it's neighbours.
+In a conventional convolution scheme, such as that used in the methods of \citet{fiolleau_algorithm_2013}, the convolution stencil acts on adjacent pixels in both time and space (see figure \ref{fig:convolution_kernels}a).
+In this Eulerian framework, different locations in time are considered in the same manner as those in the spatial dimensions.
+However, we know from previous analysis of DCCs that the motion of convective cores between images can be similar to the spacing of cores and their size \citep{heikenfeld_tobac_2019}.
+As a result, it is important to include the affects of advection when comparing images across time steps.
+
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=8.3cm]{figure05.pdf}
+    \caption{A comparison of convolution stencils with square connectivity in Eulerian (a) and Lagrangian (b) frameworks. In the Lagrangian framework, the points at prior and subsequent time steps are offset by the calculated optical flow field.}
+    \label{fig:convolution_kernels}
+\end{figure}
+
+
+To perform morphological operations which take into account this advection, we have developed a novel Lagrangian convolution method.
+For spatial operations, the Lagrangian stencil operates identically to that of a classical convolution method.
+However, when sampling points at prior or subsequent time steps, the location of the stencil are offset by the relevant optical flow vectors (figure \ref{fig:convolution_kernels}b).
+Values at the offset stencil locations are interpolated, providing a Lagrangian reference frame for changes in the observations over time.
+When applying the convolution stencil to every pixel in a sequence of images, this provides a semi-Lagrangian framework for morphological operations, combining the Lagrangian reference frame for evaluating changes over time while maintaining the regular grid of the images.
+
+Several implementations of common image processing operations have been developed using this Lagrangian convolution framework, including:
+\begin{itemize}
+    \item Sobel edge detection \citep{sobel_isotropic_2014}
+    \item A watershed algorithm using the connected-components method \citep{bieniek_efficient_2000}
+    \item Labelling of connected components \citep{hoshen_percolation_1976}
+\end{itemize}
+
+These operations are used in this method to detect the full extent of the anvil cloud associated with the DCC, to perform detection continuously across multiple time periods while accounting for the motion of the DCC, and to identify individual DCCs and DCC clusters across multiple time periods respectively.
+
+The Sobel method detects edges in an image using the magnitude of the local gradient at each pixel.
+Edge detection enables the segmentation of an image into separate regions without pre-defined thresholds (such as in brightness temperature) to separate them.
+
+Watershed algorithms are a method of image segmentation that equate an image to a topographical map, with elevation according to the value of the pixel.
+Each pixel is then descended towards its local minima until it reaches a predefined marker region.
+The method takes its name from the geographical feature of the same name, which refers to the separation between adjacent drainage basins.
+Although this physical interpretation of the algorithm applies to two dimensional images, the method can be applied to arrays with any number of dimensions, such as the method used by \citet{fiolleau_algorithm_2013} which applied watershedding to a three dimensional field.
+
+Labelling algorithms assign unique identifiers to each segmented region provided by either the edge detection or watershed algorithms.
+
+\subsection{Detection of Growing Deep Convection}
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=8.3cm]{figure06.pdf}
+    \caption{Detection of growing deep convective cloud regions for the DCC cluster in figure \ref{fig:compare_sat_radar_glm}. 15 minute average cooling rate in the GOES-16 ABI water vapour difference field is used to detect growing cores. This is effective in the growing phases of convection (a.), but becomes less effective during the mature phase (b.). Comparison with NEXRAD column mean radar reflectivity remapped to the ABI grid(c., d.). An average cooling rate of greater than 0.5 \unit{K min\textsuperscript{-1}} is indicative of a growing convective core.}
+    \label{fig:core_detection}
+\end{figure}
+
+Growing deep convective cores are detected in a similar manner to that used by \citet{zinner_cb-tram:_2008}.
+We have found that the WVD field provides the best observations for detecting growing deep convective cores as the field isolates growth in the mid troposphere, removing spurious observations of growth due to boundary layer convection and cloud formation.
+The growth is calculated using the finite difference of the WVD field in the Lagrangian perspective.
+
+We classify a region of growing deep convection as a region of continuous warming of the WVD field of at least 0.5 \unit{K} per minute over a 15 minute period, covering an area of at least 3 by 3 pixels (approximately 9 by 9 km) at each time step.
+This threshold for cloud top growth is based on previous studies which have found a cooling of 8\unit{K} over a 15 minute period to be a good predictor of intense convection \citep{roberts_nowcasting_2003, hartung_intercomparison_2013}.
+The region of growing cloud is then expanded through the use of a watershed operation to fill surrounding areas of the cloud field with a detected growth rate greater than 0.25 \unit{K} per minute to detect weaker areas of updraft within the growing cores.
+Finally, each region of detected growth is labelled, and each label checked to ensure that the growth region ends with a WVD field with a value of greater than -5, indicating the formation of an anvil cloud \citep{muller_role_2018}.
+
+Figure \ref{fig:core_detection} shows a comparison between the detected core cooling rates in ABI imagery and the corresponding column radar reflectivity measured by NEXRAD. 
+During the early development of the core, the detected cooling rate (fig. \ref{fig:core_detection}a) shows growth in the same locations as the NEXRAD radar reflectivity (fig. \ref{fig:core_detection}c).
+However, during the mature stage of the DCC, discrepancies develop between the observed cooling rate (fig.\ref{fig:core_detection}b) and the radar reflectivity (fig. \ref{fig:core_detection}d) due to the development of the anvil cloud blocking satellite observations of the core underneath.
+
+\subsection{Detection of Anvil Clouds}
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=7cm]{figure07.pdf}
+    \caption{Detection of anvil cloud extent for the mature DCC cluster in \ref{fig:compare_sat_radar_glm} using the edge gradient method. a.: The combined field of the WVD minus the SWD, to isolate the thick anvil, between the upper and lower thresholds of -5 and -15\unit{K} respectively. b.: the detected edge gradient magnitude of the field between these thresholds, which is used to detect the outer extend of the anvil cloud.}
+    \label{fig:edge_detection}
+\end{figure}
+
+%f
+\begin{figure}[t]
+    \includegraphics[width=8.3cm]{figure08.pdf}
+    \caption{Detected regions of thin anvil cloud (blue), thick anvil cloud (orange), and developing cores (red) overlaid on the GOES-16 ABI 10.8 \unit{\mu m} brightness temperature field for the DCC cluster from figure \ref{fig:compare_sat_radar_glm}. The three stages of the DCC lifecycle are shown; the growth phase (a.), the mature phase (b.), and the dissipating phase (c.). Note that the anvil region continues to be detected in c. after growing cores are no longer detected.}
+    \label{fig:detected_anvils}
+\end{figure}
+
+To detect the region of anvil clouds associated with each cluster of growing convective clouds detected using the methods outlined in the previous section, and edge-base watershed segmentation is performed.
+
+To avoid the use of a fixed threshold for anvil temperature we have implemented an edge-based method to detect the full extent of the anvil cloud (see figure \ref{fig:edge_detection}).
+We define an upper threshold for the WVD field of -5\unit{K}, as used by \citet{muller_role_2018}, and a lower threshold of -15\unit{K}, which we define as non-anvil cloud.
+Between these two thresholds we apply a Sobel filter to detect the local gradient magnitude of the field \citep{sobel_isotropic_2014}.
+This edge-based approach to classifying cloud extent has been successfully applied by \citet{dim_alternative_2013}.
+
+When applied to the detected edges of the anvil clouds, with the growth regions detected previously as markers, the watershed method allows us to detect those anvil regions associated with detected regions of growing DCCs, while avoiding the detection of non-convective regions of high, cold cloud.
+Furthermore, due to the application of the watershed algorithm to both the spatial and temporal dimensions of the sequence of images through the semi-Lagrangian framework, we are able to detect the associated anvil clouds after the growth of the DCC is no longer observed (see figure \ref{fig:detected_anvils}).
+
+To further classify the associated cloud anvils into regions of thick and thin anvil, we utilise the SWD field.
+By subtracting the SWD field from the WVD field, we are able to isolate only the thick regions of the anvil.
+By adding the SWD field to the WVD field, we are able to detect both the thick and thin anvil regions.
+
+Figure \ref{fig:detected_anvils} shows an example of the results of detecting and tracking DCC cores and their associated anvils.
+Detection of the cores (outlined in red) and the initial development of the associated anvils (outlined in orange and blue for the thick and thin anvil regions respectively) can be seen in figure \ref{fig:detected_anvils}a.
+In figure \ref{fig:detected_anvils}b we see the development of the mature anvil, which primarily consists of thick anvil, and secondary core detections as new convection develops at the edge of the DCC.
+In figure \ref{fig:detected_anvils}c, we see the detected anvil cloud begin to dissipate, which a larger proportion of the anvil cloud detected as thin anvil.
+It can also be seen that the anvil cloud is continuously detected and tracked throughout the dissipating stage, despite the lack of any detected cores that it is associated with.
+
+% To detect the regions of DCC and their associated anvils from the observations of growing cores outlined in the previous section, a watershedding approach over both space and time is applied in a similar to that used by Fiolleau and Roca [cite].
+% Watershed algorithms are a class of techniques commonly used for image segmentation.
+% Watershed algorithms work by emulating the behaviour of a geographical watershed.
+% Each location in the input array is assigned to a `basin' surrounding a local minima.
+% If these basins overlap a set of supplied markers, all the locations in the basin are assigned to the image segment of those markers.
+% The remaining basins are then flooded until they overflow into a neighbouring basin.
+% The basin is then either assigned to the same segment of the image as the neighbouring basement, or, if both are unassigned, the two basins are merged and the process repeated until all basins are assigned to segments of the image.
+% There are a wide range of implementations of watershedding algorithms, however it should be noted that despite the class usually being referred to in reference to the segmentation of images, these techniques can be applied to data with any number of dimensions.
+
+% A network based watershedding algorithm has been implemented here, albeit with the addition of a semi-Lagrangian treatment of the temporal dimension.
+% Most watershedding algorithms only consider the connectivity of pixels with their nearest neighbours in each dimension when assigning basins.
+% The algorithm used by Fiolleau in Roca used this approach for both the spatial and temporal dimensions, however, as highlighted by Heikenfeld [cite], the distance travelled by individual convective cells between the images provided by geostationary satellites may be significant in relation to separation of individual cells.
+% As a result, only considering pixels at the same location in the temporal dimension may result in either missed detections for small, rapidly advecting cores, or in extreme cases the false connection of cores due to their advection causing their locations to overlap in subsequent images.
+% Here, instead of treating the temporal dimension with an Eulerian approach (taking the same locations in adjacent time frames to be neighbours), the selection of neighbouring pixels in the temporal dimension is instead offset by the observed cloud motion using the optical flow vectors.
+% This allows both the continuous detection of small, moving DCCs, but also the ability to distinguish closely spaced DCCs.
+% Furthermore, it is expected that this will allow the detection algorithm to be applied to datasets with coarser time resolution, however this has not yet been tested.
+
+% To avoid the use of a fixed threshold for the detection of DCCs, an edge detection based approach is used for the watershedding of detected DCCs, which is demonstrated in figure \ref{fig:watershed}.
+% Rather than selecting a fixed threshold for the masking of convective and non-convective clouds, with the associated uncertainties as discussed prior, a region of `uncertainty' is selected.
+% This region is chosen as all pixels where the WVD is between -5~K (the same threshold as used by muller et al), and -15~K, below which the cloud is assumed to be non-convective.
+% Within the uncertain region, the magnitude of the local gradients of the field are calculated using a Sobel filter (as used by Dim and Takamura [cite]), and the calculated Sobel gradients used as an input for the watershed algorithm.
+% When observing a cloud field, the maximum gradient is expected to be observed at the edge of the cloud, allowing the entire volume of the anvil cloud to be detected regardless of the specific temperature of the cloud field.
+% To further enhance the ability to distinguish individual clouds using the edge detection method, a variety of channel combinations are utilised to show greater contrast between DCCs and the surrounding environment.
+% Firstly, for the detection of thick anvil clouds, the SWD is subtracted from the WVD, removing the influence of thin cirrus outflow from the cloud field as this may make the edges of the cloud appear indistinct.
+% By instead adding the SWD to the WVD, it is possible to both enhance the observation of thin cirrus outflow and enhance the contrast between it and the surrounding cloud field.
+% This second field allows us to detect a larger area encompassing both the thick convective core and anvil cloud, and the associated cirrus outflow, and allows further investigation into changes in the behaviour of anvil clouds to a variety of environmental conditions.
+
+\section{Evaluation}
+
+%f
+\begin{figure*}[t]
+    \includegraphics[width=12cm]{figure09.pdf}
+    \caption{Validation of the detection algorithm against observed GLM lightning flashes. Top row: evaluation of the probability of detection (POD), histograms showing the distance from each GLM flash (n=49,013,358) to the nearest a.: detected growth region, b.: region of warm WVD (WVD>=-5 \unit{K}), and c.: detected thick anvil region. Bottom row: evaluation of the false alarm rate (FAR), with histograms of the distance between each detected object and the nearest GLM flash for d.: detected growth regions (n=76,725), e.: regions of warm WVD (n=323,618), and f.: detected thick anvil regions (n=14,717). The orange dashed line shows the extent of the 10 pixel margin of uncertainty.}
+    \label{fig:validation}
+\end{figure*}
+
+The effectiveness of the semi-Lagrangian framework for the detection of DCCs is evaluated by analysing the proximity of detected anvil cloud regions to lightning flash detection from GLM.
+Lightning observations are frequently used to validate detection methods for deep convection \citep[e.g.,][]{zinner_validation_2013, muller_novel_2019} due to the strong correlation between deep convective updraughts and lightning activity.
+Although GLM is not capable of detecting all lightning events (approximately 70\% of lightning events are detected) \citep{peterson_removing_2020}, the high frequency of lightning flashes per DCC mean that these observations provide a suitable ground truth for validation. 
+% not provide a perfect ground truth as it detects approximately 70\% of all lightning flashes within the field, and can also report false detections due to a number of causes.
+% However, these uncertainties are considered insignificant for the validation of the detection of deep convection due to the large number of lightning flashes associated with individual deep cores, and improved data cleaning and flagging respectively.
+
+Here we apply the same validation method as used by \citet{muller_novel_2019} to evaluate the semi-Lagrangian framework for the detection of DCCs.
+We classify detection events into three categories:
+
+\begin{itemize}
+    \item Correct detection (CD), when the algorithm detects a DCC that is collocated with one or more lightning observations
+    \item False detection (FD), when the algorithm detects a DCC but no lightning flash is observed
+    \item Missed detection (ND), when the algorithm does not detect a DCC but a lightning flash is observed
+\end{itemize}
+
+Using these three categories of events we can define two measures of accuracy for the detection of DCCs.
+The probability of detection (POD) is defined as the number of correct detections divided by the total number of correct and missed detections.
+This provides a measure of how likely the algorithm is to detect a DCC that exists in the ground truth.
+The false alarm rate (FAR) is defined as the number of false detections divided by the total number of correct and false detections.
+This provides a measure of how likely a DCC detected by the algorithm is not present in the ground truth.
+
+When evaluating whether detected DCC regions and lightning observations were collocated \citet{muller_novel_2019} considered events within 32 \unit{km} and 15 minutes to be collocated.
+This margin of uncertainty was separated into two section, half from the physical separation between observed lightning strikes, and the remaining half from uncertainty in the collocation and geolocation of the satellite and lightning observations.
+For a typical ABI pixel length over the continental United States of 3 \unit{km}, this margin of error translates into 10 pixels in the ABI view.
+When considering that the resolution of GLM is a factor of four less than that of ABI, we consider that the same justification for the margin of error used by \citet{muller_novel_2019} is also applicable to collocated observations from ABI and GLM.
+
+Validation was performed using GOES-16 ABI data from the CONUS scan region for the entirety of 2018, which was processed using the method described in this article.
+In total validation was performed for 297 days of ABI data, the remaining 68 days being excluded due to missing observations from either the ABI or GLM instruments aboard GOES-16.
+Detection and tracking of DCCs was performed on a subset of the CONUS scan region for each 25 hour period consisting of the array locations of 500-1750 in the x dimension and 250-1000 in the y dimension, corresponding to a bounding box of 113.6~\degree W to 76.2~\degree W and 24.5~\degree N to 44.2~\degree N respectively.
+By performing validation over both a large region, including a range of both land and ocean domains, and a full year time period, we aim to avoid any bias in the validation associated with the variability of the accuracy of the method with location and season.
+
+Results of the validation of the detected anvil region, as well as those for the detection of growing deep convection and the WVD filter are shown in figure \ref{fig:validation}.
+Figure \ref{fig:validation}a and \ref{fig:validation}d show the missed and false detection rates, respectively, for the detected regions of growing deep convection.
+While the detection of growing DCCs shows a low FAR of 0.23, the short time frame in which growth can be observed leads to a high rate of missed detections of lightning flashes, which results in a POD of 0.23.
+
+
+We also evaluate the accuracy of detecting a fixed threshold of the WVD only to compare the detection of anvils without detecting growing cores, as used by \citet{muller_role_2018}.
+Furthermore, as demonstrated in figure \ref{fig:compare_sat_radar_glm}, very little lightning is observed during the growing phase of the DCCs.
+The missed and false detections for the WVD threshold are displayed in figures \ref{fig:validation}b and \ref{fig:validation}e respectively.
+Compared to the detection of growing DCC regions, the WVD threshold shows a much higher POD of 0.99, but also has a high FAR of 0.73, repeating the findings of \citet{muller_novel_2019} which show that although the WVD threshold method is capable of detecting the majority of DCCs, in is incapable of distinguishing between anvil clouds and other thick, high altitude clouds.
+
+The validation of the anvil regions detected using a combination of the detected growth regions and the WVD field using the semi-Lagrangian framework is shown in figure \ref{fig:validation}c and \ref{fig:validation}f.
+The novel framework is capable of maintaining the high POD of the WVD threshold (figure \ref{fig:validation}c) (POD=0.93), while also maintaining much of the low FAR of the detection of growing DCCs (FAR=0.35).
+This result highlights the capability of the semi-Lagrangian detection framework to use active detection methods to substantially reduce the compromise between POD and FAR error rates by combining multiple methods for the detection of DCCs.
+
+
+\conclusions  %% \conclusions[modified heading if necessary]
+
+Algorithms for the detection and tracking of deep convective clouds perform a vital role in both forecasting and research applications.
+Sequences from geostationary satellites provide unique observations of DCC anvil clouds over their entire lifecycle.
+However, the traditional framework used by such algorithms requires a compromise between the rates of false and missed detections due to the overlap in signature from convective and non-convective clouds \citep{konduru_new_2013}.
+Whereas novel methods have approached this problem for the detection of large, mesoscale convective systems \citep{fiolleau_algorithm_2013}, such approaches do not take advantage of the capability of the latest generation of geostationary imaging satellites to detect individual deep convective cores.
+
+By developing and implementing a novel semi-Lagrangian framework for the detection and tracking of DCCs we are able to combine the detection of growing DCC cores \citep{zinner_cb-tram:_2008} and DCC anvils \citep{muller_role_2018} to detect and track DCCs over their entire lifecycles.
+The novel methods developed here for the Semi-Lagrangian computer vision framework, along with implementations of multiple image processing operations commonly used for object detection, allow the accurate detection and tracking of moving objects utilising both spatial and temporal information.
+These methods may have impacts on applications of computer vision beyond the detection and tracking of DCCs.
+Furthermore, the novel framework is able to achieve higher levels of accuracy without compromising on the number of DCCs detected, as with previous algorithms \citep{muller_novel_2019}.
+
+By using this novel methodology, we are able to detect and track both small, isolated DCCs and large, mesoscale convective systems with a high degree of accuracy, high spatial and temporal resolution and across large domains such as the continental United States.
+The data provided about the behaviour of DCCs over their entire lifetime will allow new research into vital topics such as the response of deep convection and climate change, and the interactions and feedbacks between DCCs and large scale atmospheric thermodynamics \citep{varble_erroneous_2018}.
+
+
+%% The following commands are for the statements about the availability of data sets and/or software code corresponding to the manuscript.
+%% It is strongly recommended to make use of these sections in case data sets and/or software code have been part of your research the article is based on.
+
+% \codeavailability{The methods described in this paper are made available through a python module released under the BSD 3-clause licence.
+% The python module can be accessed through the following github repository: \url{https://github.com/w-k-jones/tobac-flow}.
+% The version of the code used to for this paper, including both the generation of figures and the validation of the method can be accessed through the following release: \url{https://github.com/w-k-jones/tobac-flow/releases/tag/v1.0} \citep{william_k_jones_2022_5889171}.
+% The figures produced for this article can be reproduced through the jupyter notebook included in the repository: \url{https://github.com/w-k-jones/tobac-flow/blob/master/examples/Tracking\%20Paper\%20Plots.ipynb}.}%% use this section when having only software code available
+
+
+% \dataavailability{All ABI, GLM and NEXRAD data utilised in this paper is openly available through the NOAA big data program.
+% The results of the validation described in section 4 can be obtained from the following data record: \url{https://zenodo.org/record/5885722} \citep{william_k_jones_2022_5885722}.} %% use this section when having only data sets available
+
+
+\codedataavailability{The methods described in this paper are made available through a python module released under the BSD 3-clause licence.
+The python module can be accessed through the following github repository: \url{https://github.com/w-k-jones/tobac-flow}.
+The version of the code used to for this paper, including both the generation of figures and the validation of the method can be accessed through the following release: \url{https://github.com/w-k-jones/tobac-flow/releases/tag/v1.0} \citep{william_k_jones_2022_5889171}.
+The figures produced for this article can be reproduced through the jupyter notebook included in the repository: \url{https://github.com/w-k-jones/tobac-flow/blob/master/examples/Tracking\%20Paper\%20Plots.ipynb}.
+
+All ABI, GLM and NEXRAD data used in this paper is openly available through the NOAA big data program.
+The results of the validation described in section 4 can be obtained from the following data record: \url{https://zenodo.org/record/5885722} \citep{william_k_jones_2022_5885722}.} %% use this section when having data sets and software code available
+
+
+% \sampleavailability{TEXT} %% use this section when having geoscientific samples available
+
+
+% \videosupplement{TEXT} %% use this section when having video supplements available
+
+
+% \appendix
+% \section{}    %% Appendix A
+
+% \subsection{}     %% Appendix A1, A2, etc.
+
+
+\noappendix       %% use this to mark the end of the appendix section
+
+%% Regarding figures and tables in appendices, the following two options are possible depending on your general handling of figures and tables in the manuscript environment:
+
+%% Option 1: If you sorted all figures and tables into the sections of the text, please also sort the appendix figures and appendix tables into the respective appendix sections.
+%% They will be correctly named automatically.
+
+%% Option 2: If you put all figures after the reference list, please insert appendix tables and figures after the normal tables and figures.
+%% To rename them correctly to A1, A2, etc., please add the following commands in front of them:
+
+\appendixfigures  %% needs to be added in front of appendix figures
+
+\appendixtables   %% needs to be added in front of appendix tables
+
+%% Please add \clearpage between each table and/or figure. Further guidelines on figures and tables can be found below.
+
+
+
+\authorcontribution{WKJ lead the development of the detection and tracking framework, data analysis and validation, and wrote this paper with contributions from MC and PS.} %% this section is mandatory
+
+\competinginterests{The authors declare that they have no competing interests.} %% this section is mandatory even if you declare that no competing interests are present
+
+% \disclaimer{TEXT} %% optional section
+
+\begin{acknowledgements}
+This research was supported by the European Research Council (ERC) project constRaining the EffeCts of Aerosols on Precipitation (RECAP) project under the European Union's Horizon 2020 research innovation programme with grant agreement number 724602.
+
+This work was performed on JASMIN, the UK collaborative data analysis facility, and LOTUS, the associated high performance batch compute cluster.
+
+The authors would like to thank the NOAA big data program for making the data used in this paper openly available.
+
+Thanks go to Max Heikenfeld and Fabian Senf for many fruitful discussions on the tracking of deep convective clouds, and for the development of the tobac software package.
+\end{acknowledgements}
+
+
+%% REFERENCES
+
+%% The reference list is compiled as follows:
+
+% \begin{thebibliography}{}
+
+% \bibitem[AUTHOR(YEAR)]{LABEL1}
+% REFERENCE 1
+
+% \bibitem[AUTHOR(YEAR)]{LABEL2}
+% REFERENCE 2
+
+% \end{thebibliography}
+
+%% Since the Copernicus LaTeX package includes the BibTeX style file copernicus.bst,
+%% authors experienced with BibTeX only have to include the following two lines:
+%%
+\bibliographystyle{copernicus}
+\bibliography{bibliography.bib}
+%%
+%% URLs and DOIs can be entered in your BibTeX file as:
+%%
+%% URL = {http://www.xyz.org/~jones/idx_g.htm}
+%% DOI = {10.5194/xyz}
+
+
+%% LITERATURE CITATIONS
+%%
+%% command                        & example result
+%% \citet{jones90}|               & Jones et al. (1990)
+%% \citep{jones90}|               & (Jones et al., 1990)
+%% \citep{jones90,jones93}|       & (Jones et al., 1990, 1993)
+%% \citep[p.~32]{jones90}|        & (Jones et al., 1990, p.~32)
+%% \citep[e.g.,][]{jones90}|      & (e.g., Jones et al., 1990)
+%% \citep[e.g.,][p.~32]{jones90}| & (e.g., Jones et al., 1990, p.~32)
+%% \citeauthor{jones90}|          & Jones et al.
+%% \citeyear{jones90}|            & 1990
+
+
+
+%% FIGURES
+
+%% When figures and tables are placed at the end of the MS (article in one-column style), please add \clearpage
+%% between bibliography and first table and/or figure as well as between each table and/or figure.
+
+
+%% ONE-COLUMN FIGURES
+
+%%f
+%\begin{figure}[t]
+%\includegraphics[width=8.3cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure}
+%
+%%% TWO-COLUMN FIGURES
+%
+%%f
+%\begin{figure*}[t]
+%\includegraphics[width=12cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure*}
+%
+%
+%%% TABLES
+%%%
+%%% The different columns must be seperated with a & command and should
+%%% end with \\ to identify the column brake.
+%
+%%% ONE-COLUMN TABLE
+%
+%%t
+%\begin{table}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table}
+%
+%%% TWO-COLUMN TABLE
+%
+%%t
+%\begin{table*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table*}
+%
+%%% LANDSCAPE TABLE
+%
+%%t
+%\begin{sidewaystable*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{sidewaystable*}
+%
+%
+%%% MATHEMATICAL EXPRESSIONS
+%
+%%% All papers typeset by Copernicus Publications follow the math typesetting regulations
+%%% given by the IUPAC Green Book (IUPAC: Quantities, Units and Symbols in Physical Chemistry,
+%%% 2nd Edn., Blackwell Science, available at: http://old.iupac.org/publications/books/gbook/green_book_2ed.pdf, 1993).
+%%%
+%%% Physical quantities/variables are typeset in italic font (t for time, T for Temperature)
+%%% Indices which are not defined are typeset in italic font (x, y, z, a, b, c)
+%%% Items/objects which are defined are typeset in roman font (Car A, Car B)
+%%% Descriptions/specifications which are defined by itself are typeset in roman font (abs, rel, ref, tot, net, ice)
+%%% Abbreviations from 2 letters are typeset in roman font (RH, LAI)
+%%% Vectors are identified in bold italic font using \vec{x}
+%%% Matrices are identified in bold roman font
+%%% Multiplication signs are typeset using the LaTeX commands \times (for vector products, grids, and exponential notations) or \cdot
+%%% The character * should not be applied as mutliplication sign
+%
+%
+%%% EQUATIONS
+%
+%%% Single-row equation
+%
+%\begin{equation}
+%
+%\end{equation}
+%
+%%% Multiline equation
+%
+%\begin{align}
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8
+%\end{align}
+%
+%
+%%% MATRICES
+%
+%\begin{matrix}
+%x & y & z\\
+%x & y & z\\
+%x & y & z\\
+%\end{matrix}
+%
+%
+%%% ALGORITHM
+%
+%\begin{algorithm}
+%\caption{...}
+%\label{a1}
+%\begin{algorithmic}
+%...
+%\end{algorithmic}
+%\end{algorithm}
+%
+%
+%%% CHEMICAL FORMULAS AND REACTIONS
+%
+%%% For formulas embedded in the text, please use \chem{}
+%
+%%% The reaction environment creates labels including the letter R, i.e. (R1), (R2), etc.
+%
+%\begin{reaction}
+%%% \rightarrow should be used for normal (one-way) chemical reactions
+%%% \rightleftharpoons should be used for equilibria
+%%% \leftrightarrow should be used for resonance structures
+%\end{reaction}
+%
+%
+%%% PHYSICAL UNITS
+%%%
+%%% Please use \unit{} and apply the exponential notation
+
+
+\end{document}
